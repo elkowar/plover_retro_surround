@@ -1,13 +1,19 @@
+import re
 from plover.formatting import _Context, _Action
 
 
+SEPARATOR_RE = re.compile(r"(?<!(?<!\\)\\):")  # matches only unescaped colons
+ESCAPED_COLON_RE = re.compile(r"\\:")
+
+def _unescape_colon(arg):
+    return ESCAPED_COLON_RE.sub(":", arg)
+
 def __retro_surround(ctx: _Context, cmdline: str) -> _Action:
     action: _Action = ctx.copy_last_action()
-    args = cmdline.split(":")
+    args = SEPARATOR_RE.split(cmdline)
     word_cnt = int(args[0])
-    left_char = args[1]
-    right_char = args[2]
-
+    left_char = _unescape_colon(args[1])
+    right_char = _unescape_colon(args[2])
     last_words = "".join(ctx.last_fragments(count=word_cnt))
 
     action.prev_replace = last_words
